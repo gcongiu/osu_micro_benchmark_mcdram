@@ -9,6 +9,8 @@
  */
 
 #include "osu_1sc.h"
+#include "osu_mcdram.h"
+#include <sys/mman.h>
 
 #ifdef _ENABLE_CUDA_
 CUcontext cuContext;
@@ -38,6 +40,9 @@ MPI_Aint disp_local;
 
 int mem_on_dev; 
 struct options_t options;
+
+static size_t sbuf_free_size = 0;
+static size_t rbuf_free_size = 0;
 
 void 
 usage (int options_type, char const * name) 
@@ -426,7 +431,13 @@ allocate_memory(int rank, char *sbuf_orig, char *rbuf_orig, char **sbuf, char **
             char **win_base, int size, WINDOW type, MPI_Win *win)
 {
     int page_size;
+    char *sbuf_membind_type = NULL;
+    char *rbuf_membind_type = NULL;
 
+    sbuf_membind_type = getenv("OSU_SBUF_MEMBIND_TYPE");
+    rbuf_membind_type = getenv("OSU_RBUF_MEMBIND_TYPE");
+
+    
     page_size = getpagesize();
     assert(page_size <= MAX_ALIGNMENT);
 
@@ -443,9 +454,24 @@ allocate_memory(int rank, char *sbuf_orig, char *rbuf_orig, char **sbuf, char **
          set_device_memory(*rbuf, 'b', size);
     }
     else {
-         *sbuf = (char *)align_buffer((void *)sbuf_orig, page_size);
+         /* we touch memory after buffer allocation to make
+          * sure that physical memory is allocated as well */
+         if (sbuf_membind_type && strcmp(sbuf_membind_type, "MCDRAM") == 0 && sbuf != win_base) {
+             alloc_mcdram_mem((void **)sbuf, size);
+         }
+         else {
+             *sbuf = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+         }
+         sbuf_free_size = size;
          memset(*sbuf, 'a', size);
-         *rbuf = (char *)align_buffer((void *)rbuf_orig, page_size);
+
+         if (rbuf_membind_type && strcmp(rbuf_membind_type, "MCDRAM") == 0 && rbuf != win_base) {
+             alloc_mcdram_mem((void **)rbuf, size);
+         }
+         else {
+             *rbuf = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+         }
+         rbuf_free_size = size;
          memset(*rbuf, 'b', size);
     }
 
@@ -602,5 +628,14 @@ free_memory (void *sbuf, void *rbuf, MPI_Win win, int rank)
             }
             break;
     }
+    
+    if (sbuf_free_size > 0) {
+        free_mcdram_mem(sbuf, sbuf_free_size);
+        sbuf_free_size = 0;
+    }
+    
+    if (rbuf_free_size > 0) {
+        free_mcdram_mem(rbuf, rbuf_free_size);
+        rbuf_free_size = 0;
+    }
 }
-

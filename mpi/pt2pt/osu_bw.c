@@ -29,7 +29,8 @@ main (int argc, char *argv[])
     }
     
     set_header(HEADER);
-    
+   
+    init_mcdram(); 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -83,7 +84,14 @@ main (int argc, char *argv[])
 
     /* Bandwidth test */
     for(size = 1; size <= MAX_MSG_SIZE; size *= 2) {
-        touch_data(s_buf, r_buf, myid, size);
+        /* touching data inside this for loop reduces
+         * memory bandwidth because data from the two
+         * buffers is interleaved in physical memory
+         * reducing the effectiveness of caching. Thus
+         * we touch the whole buffers after allocation
+         * making s_buf and r_buf contiguous in memory
+         * and ultimately improving data locality. */
+        //touch_data(s_buf, r_buf, myid, size);
 
         if(size > LARGE_MESSAGE_SIZE) {
             options.loop = options.loop_large;
@@ -132,8 +140,15 @@ main (int argc, char *argv[])
         }
     }
 
+    if (myid == 0) {
+        char cmd[64];
+        sprintf(cmd, "numastat -p %d", getpid());
+        system(cmd);
+    }
+
     free_memory(s_buf, r_buf, myid);
     MPI_Finalize();
+    fini_mcdram();
 
     if (none != options.accel) {
         if (cleanup_accel()) {

@@ -29,6 +29,7 @@ main (int argc, char *argv[])
 
     set_header(HEADER);
 
+    init_mcdram();
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -83,7 +84,7 @@ main (int argc, char *argv[])
     
     /* Latency test */
     for(size = 0; size <= MAX_MSG_SIZE; size = (size ? size * 2 : 1)) {
-        touch_data(s_buf, r_buf, myid, size);
+        //touch_data(s_buf, r_buf, myid, size);
 
         if(size > LARGE_MESSAGE_SIZE) {
             options.loop = options.loop_large;
@@ -121,6 +122,7 @@ main (int argc, char *argv[])
 
     free_memory(s_buf, r_buf, myid);
     MPI_Finalize();
+    fini_mcdram();
 
     if (none != options.accel) {
         if (cleanup_accel()) {

@@ -90,7 +90,8 @@ build_triplet = @build@
 host_triplet = @host@
 one_sided_PROGRAMS = osu_acc_latency$(EXEEXT) osu_get_bw$(EXEEXT) \
 	osu_get_latency$(EXEEXT) osu_put_bibw$(EXEEXT) \
-	osu_put_bw$(EXEEXT) osu_put_latency$(EXEEXT) $(am__EXEEXT_1)
+	osu_put_mbw$(EXEEXT) osu_get_mbw$(EXEEXT) osu_put_bw$(EXEEXT) \
+	osu_put_latency$(EXEEXT) $(am__EXEEXT_1)
 @MPI3_LIBRARY_TRUE@am__append_1 = osu_get_acc_latency osu_fop_latency osu_cas_latency
 @BUILD_PROFILING_LIB_TRUE@@EMBEDDED_BUILD_TRUE@am__append_2 = $(top_builddir)/../lib/lib@PMPILIBNAME@.la
 subdir = mpi/one-sided
@@ -108,41 +109,87 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(one_sideddir)"
 PROGRAMS = $(one_sided_PROGRAMS)
 am_osu_acc_latency_OBJECTS = osu_acc_latency.$(OBJEXT) \
-	osu_1sc.$(OBJEXT)
+	osu_1sc.$(OBJEXT) osu_mcdram.$(OBJEXT)
 osu_acc_latency_OBJECTS = $(am_osu_acc_latency_OBJECTS)
 osu_acc_latency_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+osu_acc_latency_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(osu_acc_latency_LDFLAGS) $(LDFLAGS) \
+	-o $@
 am_osu_cas_latency_OBJECTS = osu_cas_latency.$(OBJEXT) \
-	osu_1sc.$(OBJEXT)
+	osu_1sc.$(OBJEXT) osu_mcdram.$(OBJEXT)
 osu_cas_latency_OBJECTS = $(am_osu_cas_latency_OBJECTS)
 osu_cas_latency_LDADD = $(LDADD)
+osu_cas_latency_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(osu_cas_latency_LDFLAGS) $(LDFLAGS) \
+	-o $@
 am_osu_fop_latency_OBJECTS = osu_fop_latency.$(OBJEXT) \
-	osu_1sc.$(OBJEXT)
+	osu_1sc.$(OBJEXT) osu_mcdram.$(OBJEXT)
 osu_fop_latency_OBJECTS = $(am_osu_fop_latency_OBJECTS)
 osu_fop_latency_LDADD = $(LDADD)
+osu_fop_latency_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(osu_fop_latency_LDFLAGS) $(LDFLAGS) \
+	-o $@
 osu_get_acc_latency_SOURCES = osu_get_acc_latency.c
 osu_get_acc_latency_OBJECTS = osu_get_acc_latency.$(OBJEXT)
 osu_get_acc_latency_LDADD = $(LDADD)
-am_osu_get_bw_OBJECTS = osu_get_bw.$(OBJEXT) osu_1sc.$(OBJEXT)
+am_osu_get_bw_OBJECTS = osu_get_bw.$(OBJEXT) osu_1sc.$(OBJEXT) \
+	osu_mcdram.$(OBJEXT)
 osu_get_bw_OBJECTS = $(am_osu_get_bw_OBJECTS)
 osu_get_bw_LDADD = $(LDADD)
+osu_get_bw_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(osu_get_bw_LDFLAGS) $(LDFLAGS) -o $@
 am_osu_get_latency_OBJECTS = osu_get_latency.$(OBJEXT) \
-	osu_1sc.$(OBJEXT)
+	osu_1sc.$(OBJEXT) osu_mcdram.$(OBJEXT)
 osu_get_latency_OBJECTS = $(am_osu_get_latency_OBJECTS)
 osu_get_latency_LDADD = $(LDADD)
-am_osu_put_bibw_OBJECTS = osu_put_bibw.$(OBJEXT) osu_1sc.$(OBJEXT)
+osu_get_latency_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(osu_get_latency_LDFLAGS) $(LDFLAGS) \
+	-o $@
+am_osu_get_mbw_OBJECTS = osu_get_mbw.$(OBJEXT) osu_1sc.$(OBJEXT) \
+	osu_mcdram.$(OBJEXT)
+osu_get_mbw_OBJECTS = $(am_osu_get_mbw_OBJECTS)
+osu_get_mbw_LDADD = $(LDADD)
+osu_get_mbw_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(osu_get_mbw_LDFLAGS) $(LDFLAGS) -o $@
+am_osu_put_bibw_OBJECTS = osu_put_bibw.$(OBJEXT) osu_1sc.$(OBJEXT) \
+	osu_mcdram.$(OBJEXT)
 osu_put_bibw_OBJECTS = $(am_osu_put_bibw_OBJECTS)
 osu_put_bibw_LDADD = $(LDADD)
-am_osu_put_bw_OBJECTS = osu_put_bw.$(OBJEXT) osu_1sc.$(OBJEXT)
+osu_put_bibw_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(osu_put_bibw_LDFLAGS) $(LDFLAGS) -o $@
+am_osu_put_bw_OBJECTS = osu_put_bw.$(OBJEXT) osu_1sc.$(OBJEXT) \
+	osu_mcdram.$(OBJEXT)
 osu_put_bw_OBJECTS = $(am_osu_put_bw_OBJECTS)
 osu_put_bw_LDADD = $(LDADD)
+osu_put_bw_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(osu_put_bw_LDFLAGS) $(LDFLAGS) -o $@
 am_osu_put_latency_OBJECTS = osu_put_latency.$(OBJEXT) \
-	osu_1sc.$(OBJEXT)
+	osu_1sc.$(OBJEXT) osu_mcdram.$(OBJEXT)
 osu_put_latency_OBJECTS = $(am_osu_put_latency_OBJECTS)
 osu_put_latency_LDADD = $(LDADD)
+osu_put_latency_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(osu_put_latency_LDFLAGS) $(LDFLAGS) \
+	-o $@
+am_osu_put_mbw_OBJECTS = osu_put_mbw.$(OBJEXT) osu_1sc.$(OBJEXT) \
+	osu_mcdram.$(OBJEXT)
+osu_put_mbw_OBJECTS = $(am_osu_put_mbw_OBJECTS)
+osu_put_mbw_LDADD = $(LDADD)
+osu_put_mbw_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(osu_put_mbw_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -180,13 +227,15 @@ am__v_CCLD_1 =
 SOURCES = $(osu_acc_latency_SOURCES) $(osu_cas_latency_SOURCES) \
 	$(osu_fop_latency_SOURCES) osu_get_acc_latency.c \
 	$(osu_get_bw_SOURCES) $(osu_get_latency_SOURCES) \
-	$(osu_put_bibw_SOURCES) $(osu_put_bw_SOURCES) \
-	$(osu_put_latency_SOURCES)
+	$(osu_get_mbw_SOURCES) $(osu_put_bibw_SOURCES) \
+	$(osu_put_bw_SOURCES) $(osu_put_latency_SOURCES) \
+	$(osu_put_mbw_SOURCES)
 DIST_SOURCES = $(osu_acc_latency_SOURCES) $(osu_cas_latency_SOURCES) \
 	$(osu_fop_latency_SOURCES) osu_get_acc_latency.c \
 	$(osu_get_bw_SOURCES) $(osu_get_latency_SOURCES) \
-	$(osu_put_bibw_SOURCES) $(osu_put_bw_SOURCES) \
-	$(osu_put_latency_SOURCES)
+	$(osu_get_mbw_SOURCES) $(osu_put_bibw_SOURCES) \
+	$(osu_put_bw_SOURCES) $(osu_put_latency_SOURCES) \
+	$(osu_put_mbw_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -336,14 +385,26 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 one_sideddir = $(pkglibexecdir)/mpi/one-sided
-osu_put_latency_SOURCES = osu_put_latency.c osu_1sc.c osu_1sc.h
-osu_put_bw_SOURCES = osu_put_bw.c osu_1sc.c osu_1sc.h
-osu_put_bibw_SOURCES = osu_put_bibw.c osu_1sc.c osu_1sc.h
-osu_get_latency_SOURCES = osu_get_latency.c osu_1sc.c osu_1sc.h
-osu_get_bw_SOURCES = osu_get_bw.c osu_1sc.c osu_1sc.h
-osu_acc_latency_SOURCES = osu_acc_latency.c osu_1sc.c osu_1sc.h
-osu_fop_latency_SOURCES = osu_fop_latency.c osu_1sc.c osu_1sc.h
-osu_cas_latency_SOURCES = osu_cas_latency.c osu_1sc.c osu_1sc.h
+osu_put_latency_SOURCES = osu_put_latency.c osu_1sc.c osu_mcdram.c osu_mcdram.h osu_1sc.h
+osu_put_latency_LDFLAGS = -lhwloc
+osu_put_mbw_SOURCES = osu_put_mbw.c osu_1sc.c osu_mcdram.c osu_mcdram.h osu_1sc.h
+osu_put_mbw_LDFLAGS = -lhwloc
+osu_get_mbw_SOURCES = osu_get_mbw.c osu_1sc.c osu_mcdram.c osu_mcdram.h osu_1sc.h
+osu_get_mbw_LDFLAGS = -lhwloc
+osu_put_bw_SOURCES = osu_put_bw.c osu_1sc.c osu_mcdram.c osu_mcdram.h osu_1sc.h
+osu_put_bw_LDFLAGS = -lhwloc
+osu_put_bibw_SOURCES = osu_put_bibw.c osu_1sc.c osu_mcdram.c osu_mcdram.h osu_1sc.h
+osu_put_bibw_LDFLAGS = -lhwloc
+osu_get_latency_SOURCES = osu_get_latency.c osu_1sc.c osu_mcdram.c osu_mcdram.h osu_1sc.h
+osu_get_latency_LDFLAGS = -lhwloc
+osu_get_bw_SOURCES = osu_get_bw.c osu_1sc.c osu_mcdram.c osu_mcdram.h osu_1sc.h
+osu_get_bw_LDFLAGS = -lhwloc
+osu_acc_latency_SOURCES = osu_acc_latency.c osu_1sc.c osu_mcdram.c osu_mcdram.h osu_1sc.h
+osu_acc_latency_LDFLAGS = -lhwloc
+osu_fop_latency_SOURCES = osu_fop_latency.c osu_1sc.c osu_mcdram.c osu_mcdram.h osu_1sc.h
+osu_fop_latency_LDFLAGS = -lhwloc
+osu_cas_latency_SOURCES = osu_cas_latency.c osu_1sc.c osu_mcdram.c osu_mcdram.h osu_1sc.h
+osu_cas_latency_LDFLAGS = -lhwloc
 @EMBEDDED_BUILD_TRUE@AM_LDFLAGS = $(am__append_2) \
 @EMBEDDED_BUILD_TRUE@	$(top_builddir)/../lib/lib@MPILIBNAME@.la
 @EMBEDDED_BUILD_TRUE@AM_CPPFLAGS = -I$(top_builddir)/../src/include \
@@ -435,15 +496,15 @@ clean-one_sidedPROGRAMS:
 
 osu_acc_latency$(EXEEXT): $(osu_acc_latency_OBJECTS) $(osu_acc_latency_DEPENDENCIES) $(EXTRA_osu_acc_latency_DEPENDENCIES) 
 	@rm -f osu_acc_latency$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(osu_acc_latency_OBJECTS) $(osu_acc_latency_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(osu_acc_latency_LINK) $(osu_acc_latency_OBJECTS) $(osu_acc_latency_LDADD) $(LIBS)
 
 osu_cas_latency$(EXEEXT): $(osu_cas_latency_OBJECTS) $(osu_cas_latency_DEPENDENCIES) $(EXTRA_osu_cas_latency_DEPENDENCIES) 
 	@rm -f osu_cas_latency$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(osu_cas_latency_OBJECTS) $(osu_cas_latency_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(osu_cas_latency_LINK) $(osu_cas_latency_OBJECTS) $(osu_cas_latency_LDADD) $(LIBS)
 
 osu_fop_latency$(EXEEXT): $(osu_fop_latency_OBJECTS) $(osu_fop_latency_DEPENDENCIES) $(EXTRA_osu_fop_latency_DEPENDENCIES) 
 	@rm -f osu_fop_latency$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(osu_fop_latency_OBJECTS) $(osu_fop_latency_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(osu_fop_latency_LINK) $(osu_fop_latency_OBJECTS) $(osu_fop_latency_LDADD) $(LIBS)
 
 osu_get_acc_latency$(EXEEXT): $(osu_get_acc_latency_OBJECTS) $(osu_get_acc_latency_DEPENDENCIES) $(EXTRA_osu_get_acc_latency_DEPENDENCIES) 
 	@rm -f osu_get_acc_latency$(EXEEXT)
@@ -451,23 +512,31 @@ osu_get_acc_latency$(EXEEXT): $(osu_get_acc_latency_OBJECTS) $(osu_get_acc_laten
 
 osu_get_bw$(EXEEXT): $(osu_get_bw_OBJECTS) $(osu_get_bw_DEPENDENCIES) $(EXTRA_osu_get_bw_DEPENDENCIES) 
 	@rm -f osu_get_bw$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(osu_get_bw_OBJECTS) $(osu_get_bw_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(osu_get_bw_LINK) $(osu_get_bw_OBJECTS) $(osu_get_bw_LDADD) $(LIBS)
 
 osu_get_latency$(EXEEXT): $(osu_get_latency_OBJECTS) $(osu_get_latency_DEPENDENCIES) $(EXTRA_osu_get_latency_DEPENDENCIES) 
 	@rm -f osu_get_latency$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(osu_get_latency_OBJECTS) $(osu_get_latency_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(osu_get_latency_LINK) $(osu_get_latency_OBJECTS) $(osu_get_latency_LDADD) $(LIBS)
+
+osu_get_mbw$(EXEEXT): $(osu_get_mbw_OBJECTS) $(osu_get_mbw_DEPENDENCIES) $(EXTRA_osu_get_mbw_DEPENDENCIES) 
+	@rm -f osu_get_mbw$(EXEEXT)
+	$(AM_V_CCLD)$(osu_get_mbw_LINK) $(osu_get_mbw_OBJECTS) $(osu_get_mbw_LDADD) $(LIBS)
 
 osu_put_bibw$(EXEEXT): $(osu_put_bibw_OBJECTS) $(osu_put_bibw_DEPENDENCIES) $(EXTRA_osu_put_bibw_DEPENDENCIES) 
 	@rm -f osu_put_bibw$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(osu_put_bibw_OBJECTS) $(osu_put_bibw_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(osu_put_bibw_LINK) $(osu_put_bibw_OBJECTS) $(osu_put_bibw_LDADD) $(LIBS)
 
 osu_put_bw$(EXEEXT): $(osu_put_bw_OBJECTS) $(osu_put_bw_DEPENDENCIES) $(EXTRA_osu_put_bw_DEPENDENCIES) 
 	@rm -f osu_put_bw$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(osu_put_bw_OBJECTS) $(osu_put_bw_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(osu_put_bw_LINK) $(osu_put_bw_OBJECTS) $(osu_put_bw_LDADD) $(LIBS)
 
 osu_put_latency$(EXEEXT): $(osu_put_latency_OBJECTS) $(osu_put_latency_DEPENDENCIES) $(EXTRA_osu_put_latency_DEPENDENCIES) 
 	@rm -f osu_put_latency$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(osu_put_latency_OBJECTS) $(osu_put_latency_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(osu_put_latency_LINK) $(osu_put_latency_OBJECTS) $(osu_put_latency_LDADD) $(LIBS)
+
+osu_put_mbw$(EXEEXT): $(osu_put_mbw_OBJECTS) $(osu_put_mbw_DEPENDENCIES) $(EXTRA_osu_put_mbw_DEPENDENCIES) 
+	@rm -f osu_put_mbw$(EXEEXT)
+	$(AM_V_CCLD)$(osu_put_mbw_LINK) $(osu_put_mbw_OBJECTS) $(osu_put_mbw_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -482,9 +551,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osu_get_acc_latency.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osu_get_bw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osu_get_latency.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osu_get_mbw.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osu_mcdram.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osu_put_bibw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osu_put_bw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osu_put_latency.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osu_put_mbw.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

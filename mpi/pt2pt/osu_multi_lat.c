@@ -23,6 +23,8 @@ int main(int argc, char* argv[])
     unsigned long align_size = sysconf(_SC_PAGESIZE);
     int rank, nprocs; 
     int pairs;
+    char *sbuf_membind_type = NULL;
+    char *rbuf_membind_type = NULL;
 
     int po_ret = process_options(argc, argv, LAT);
 
@@ -33,6 +35,7 @@ int main(int argc, char* argv[])
         }
     }
     set_header(HEADER);
+    init_mcdram();
     MPI_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -70,15 +73,24 @@ int main(int argc, char* argv[])
             break;
     }
 
-    if (posix_memalign((void**)&s_buf, align_size, MAX_MSG_SIZE)) {
-        fprintf(stderr, "Error allocating host memory\n");
-        return EXIT_FAILURE;
-    }
+    sbuf_membind_type = getenv("OSU_SBUF_MEMBIND_TYPE");
+    rbuf_membind_type = getenv("OSU_RBUF_MEMBIND_TYPE");
 
-    if (posix_memalign((void**)&r_buf, align_size, MAX_MSG_SIZE)) {
-        fprintf(stderr, "Error allocating host memory\n");
-        return EXIT_FAILURE;
-    }
+    if (sbuf_membind_type && strcmp(sbuf_membind_type, "MCDRAM") == 0)
+        alloc_mcdram_mem((void **)&s_buf, MAX_MSG_SIZE);
+    else
+        if (posix_memalign((void**)&s_buf, align_size, MAX_MSG_SIZE)) {
+            fprintf(stderr, "Error allocating host memory\n");
+            return EXIT_FAILURE;
+        }
+
+    if (rbuf_membind_type && strcmp(rbuf_membind_type, "MCDRAM") == 0)
+        alloc_mcdram_mem((void **)&r_buf, MAX_MSG_SIZE);
+    else
+        if (posix_memalign((void**)&r_buf, align_size, MAX_MSG_SIZE)) {
+            fprintf(stderr, "Error allocating host memory\n");
+            return EXIT_FAILURE;
+        }
 
     memset(s_buf, 0, MAX_MSG_SIZE);
     memset(r_buf, 0, MAX_MSG_SIZE);
@@ -96,6 +108,7 @@ int main(int argc, char* argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     MPI_Finalize();
+    fini_mcdram();
 
     free(r_buf);
     free(s_buf);

@@ -339,6 +339,11 @@ int
 allocate_memory (char ** sbuf, char ** rbuf, int rank)
 {
     unsigned long align_size = sysconf(_SC_PAGESIZE);
+    char *sbuf_membind_type = NULL;
+    char *rbuf_membind_type = NULL;
+
+    sbuf_membind_type = getenv("OSU_SBUF_MEMBIND_TYPE");
+    rbuf_membind_type = getenv("OSU_RBUF_MEMBIND_TYPE");
 
     switch (rank) {
         case 0:
@@ -367,15 +372,23 @@ allocate_memory (char ** sbuf, char ** rbuf, int rank)
             }
 
             else {
-                if (posix_memalign((void**)sbuf, align_size, MYBUFSIZE)) {
-                    fprintf(stderr, "Error allocating host memory\n");
-                    return 1;
+                if (sbuf_membind_type && strcmp(sbuf_membind_type, "MCDRAM") == 0) {
+                    alloc_mcdram_mem((void **)sbuf, MYBUFSIZE);
                 }
+                else 
+                    if (posix_memalign((void**)sbuf, align_size, MYBUFSIZE)) {
+                        fprintf(stderr, "Error allocating host memory\n");
+                        return 1;
+                    }
 
-                if (posix_memalign((void**)rbuf, align_size, MYBUFSIZE)) {
-                    fprintf(stderr, "Error allocating host memory\n");
-                    return 1;
+                if (rbuf_membind_type && strcmp(rbuf_membind_type, "MCDRAM") == 0) {
+                    alloc_mcdram_mem((void **)rbuf, MYBUFSIZE);
                 }
+                else
+                    if (posix_memalign((void**)rbuf, align_size, MYBUFSIZE)) {
+                        fprintf(stderr, "Error allocating host memory\n");
+                        return 1;
+                    }
             }
             break;
         case 1:
@@ -404,18 +417,28 @@ allocate_memory (char ** sbuf, char ** rbuf, int rank)
             }
 
             else {
-                if (posix_memalign((void**)sbuf, align_size, MYBUFSIZE)) {
-                    fprintf(stderr, "Error allocating host memory\n");
-                    return 1;
+                if (sbuf_membind_type && strcmp(sbuf_membind_type, "MCDRAM") == 0) {
+                    alloc_mcdram_mem((void **)sbuf, MYBUFSIZE);
                 }
+                else 
+                    if (posix_memalign((void**)sbuf, align_size, MYBUFSIZE)) {
+                        fprintf(stderr, "Error allocating host memory\n");
+                        return 1;
+                    }
 
-                if (posix_memalign((void**)rbuf, align_size, MYBUFSIZE)) {
-                    fprintf(stderr, "Error allocating host memory\n");
-                    return 1;
+                if (rbuf_membind_type && strcmp(rbuf_membind_type, "MCDRAM") == 0) {
+                    alloc_mcdram_mem((void **)rbuf, MYBUFSIZE);
                 }
+                else
+                    if (posix_memalign((void**)rbuf, align_size, MYBUFSIZE)) {
+                        fprintf(stderr, "Error allocating host memory\n");
+                        return 1;
+                    }
             }
             break;
     }
+
+    touch_data(sbuf, rbuf, rank, MYBUFSIZE);
 
     return 0;
 }
@@ -549,16 +572,29 @@ cleanup_accel (void)
 void
 free_memory (void * sbuf, void * rbuf, int rank)
 {
+    char *sbuf_membind_type = NULL;
+    char *rbuf_membind_type = NULL;
+
+    sbuf_membind_type = getenv("OSU_SBUF_MEMBIND_TYPE");
+    rbuf_membind_type = getenv("OSU_RBUF_MEMBIND_TYPE");
+
     switch (rank) {
         case 0:
             if ('D' == options.src || 'M' == options.src) {
                 free_device_buffer(sbuf);
                 free_device_buffer(rbuf);
             }
-
             else {
-                free(sbuf);
-                free(rbuf);
+                if (sbuf_membind_type && strcmp(sbuf_membind_type, "MCDRAM") == 0)
+                    free_mcdram_mem(sbuf, MYBUFSIZE);
+                else {
+                    free(sbuf);
+                }
+                if (rbuf_membind_type && strcmp(rbuf_membind_type, "MCDRAM") == 0)
+                    free_mcdram_mem(rbuf, MYBUFSIZE);
+                else {
+                    free(rbuf);
+                }
             }
             break;
         case 1:
@@ -568,8 +604,16 @@ free_memory (void * sbuf, void * rbuf, int rank)
             }
 
             else {
-                free(sbuf);
-                free(rbuf);
+                if (sbuf_membind_type && strcmp(sbuf_membind_type, "MCDRAM") == 0)
+                    free_mcdram_mem(sbuf, MYBUFSIZE);
+                else {
+                    free(sbuf);
+                }
+                if (rbuf_membind_type && strcmp(rbuf_membind_type, "MCDRAM") == 0)
+                    free_mcdram_mem(rbuf, MYBUFSIZE);
+                else {
+                    free(rbuf);
+                }
             }
             break;
     }

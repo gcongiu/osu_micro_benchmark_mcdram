@@ -25,6 +25,8 @@
 #include <cuda_runtime.h>
 #endif
 
+#include "osu_mcdram.h"
+
 #define MAX_ALIGNMENT 65536
 
 #ifndef FIELD_WIDTH

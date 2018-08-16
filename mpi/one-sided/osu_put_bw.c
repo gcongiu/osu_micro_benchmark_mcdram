@@ -63,6 +63,7 @@ int main (int argc, char *argv[])
         }
     }
 
+    init_mcdram();
     MPI_CHECK(MPI_Init(&argc, &argv));
     MPI_CHECK(MPI_Comm_size(MPI_COMM_WORLD, &nprocs));
     MPI_CHECK(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
@@ -133,6 +134,7 @@ int main (int argc, char *argv[])
     }
 
     MPI_CHECK(MPI_Finalize());
+    fini_mcdram();
 
     if (none != options.accel) {
         if (cleanup_accel()) {

@@ -27,6 +27,8 @@
 #include <openacc.h>
 #endif
 
+#include "osu_mcdram.h"
+
 #ifdef PACKAGE_VERSION
 #   define HEADER "# " BENCHMARK " v" PACKAGE_VERSION "\n"
 #else

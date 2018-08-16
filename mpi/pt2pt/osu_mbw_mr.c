@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include "osu_mcdram.h"
 
 #define DEFAULT_WINDOW       (64)
 
@@ -49,6 +50,8 @@ static int skip_override;
 int main(int argc, char *argv[])
 {
     char *s_buf, *r_buf;
+    char *sbuf_membind_type = NULL;
+    char *rbuf_membind_type = NULL;
     unsigned long align_size = sysconf(_SC_PAGESIZE);
     int numprocs, rank;
     int pairs, print_rate;
@@ -57,7 +60,8 @@ int main(int argc, char *argv[])
 
     loop_override = 0;
     skip_override = 0;
-    
+   
+    init_mcdram(); 
     MPI_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
@@ -122,15 +126,26 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (posix_memalign((void**)&s_buf, align_size, MAX_MSG_SIZE)) {
-        fprintf(stderr, "Error allocating host memory\n");
-        return 1;
-    }
+    sbuf_membind_type = getenv("OSU_SBUF_MEMBIND_TYPE");
+    rbuf_membind_type = getenv("OSU_RBUF_MEMBIND_TYPE");
 
-    if (posix_memalign((void**)&r_buf, align_size, MAX_MSG_SIZE)) {
-        fprintf(stderr, "Error allocating host memory\n");
-        return 1;
-    }
+    if (sbuf_membind_type && strcmp(sbuf_membind_type, "MCDRAM") == 0)
+        alloc_mcdram_mem((void **)&s_buf, MAX_MSG_SIZE);
+    else
+        if (posix_memalign((void**)&s_buf, align_size, MAX_MSG_SIZE)) {
+            fprintf(stderr, "Error allocating host memory\n");
+            return 1;
+        }
+    memset(s_buf, 'a', MAX_MSG_SIZE);
+
+    if (rbuf_membind_type && strcmp(rbuf_membind_type, "MCDRAM") == 0)
+        alloc_mcdram_mem((void **)&r_buf, MAX_MSG_SIZE);
+    else
+        if (posix_memalign((void**)&r_buf, align_size, MAX_MSG_SIZE)) {
+            fprintf(stderr, "Error allocating host memory\n");
+            return 1;
+        }
+    memset(r_buf, 'b', MAX_MSG_SIZE);
 
     if(numprocs < 2) {
         if(rank == 0) {
@@ -281,11 +296,24 @@ int main(int argc, char *argv[])
        }
    }
 
+   if (rank == 0) {
+       char cmd[64];
+       sprintf(cmd, "numastat -p %d", getpid());
+       system(cmd);
+   }
+
 error:
-   free(r_buf);
-   free(s_buf);
+   if (sbuf_membind_type && strcmp(sbuf_membind_type, "MCDRAM") == 0)
+       free_mcdram_mem(s_buf, MAX_MSG_SIZE);
+   else
+       free(s_buf);
+   if (rbuf_membind_type && strcmp(rbuf_membind_type, "MCDRAM") == 0)
+       free_mcdram_mem(r_buf, MAX_MSG_SIZE);
+   else
+       free(r_buf);
 
    MPI_Finalize();
+   fini_mcdram();
 
    return EXIT_SUCCESS;
 }
@@ -313,10 +341,10 @@ double calc_bw(int rank, int size, int num_pairs, int window_size, char *s_buf,
     int mult = (DEFAULT_WINDOW / window_size) > 0 ? (DEFAULT_WINDOW /
             window_size) : 1;
 
-    for(i = 0; i < size; i++) {
-        s_buf[i] = 'a';
-        r_buf[i] = 'b';
-    }
+    //for(i = 0; i < size; i++) {
+    //    s_buf[i] = 'a';
+    //    r_buf[i] = 'b';
+    //}
 
     if(!loop_override || !skip_override) {
         if(size > LARGE_THRESHOLD) {

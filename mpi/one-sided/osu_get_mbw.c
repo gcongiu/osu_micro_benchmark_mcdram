@@ -42,14 +42,15 @@ void run_get_with_flush (int, WINDOW);
 void run_get_with_flush_local (int, WINDOW);
 #endif
 void run_get_with_pscw (int, WINDOW);
+static int nprocs;
 
 int main (int argc, char *argv[])
 {
-    int         rank,nprocs;
+    int         rank;
     int         po_ret = po_okay;
 #if MPI_VERSION >= 3
     WINDOW      win_type=WIN_ALLOCATE;
-    SYNC        sync_type=FLUSH;
+    SYNC        sync_type=FENCE;
 #else
     WINDOW      win_type=WIN_CREATE;
     SYNC        sync_type=LOCK;
@@ -99,7 +100,7 @@ int main (int argc, char *argv[])
             break;
     }
 
-    if(nprocs != 2) {
+    if(nprocs < 2) {
         if(rank == 0) {
             fprintf(stderr, "This test requires exactly two processes\n");
         }
@@ -183,7 +184,7 @@ void print_header (int rank, WINDOW win, SYNC sync)
 void print_bw(int rank, int size, double t)
 {
     if (rank == 0) {
-        double tmp = size / 1e6 * options.loop * WINDOW_SIZE_LARGE;
+        double tmp = size / 1e6 * options.loop * WINDOW_SIZE_LARGE * nprocs;
 
         fprintf(stdout, "%-*d%*.*f\n", 10, size, FIELD_WIDTH,
                 FLOAT_PRECISION, tmp / t);
@@ -379,6 +380,7 @@ void run_get_with_fence(int rank, WINDOW type)
 {
     double t = 0.0; 
     int size, i, j;
+    int origin_rank;
     MPI_Aint disp = 0;
     MPI_Win     win;
 
@@ -397,28 +399,24 @@ void run_get_with_fence(int rank, WINDOW type)
             options.skip = SKIP_LARGE;
         }
 
+        /* compute origin rank */
+        origin_rank = (rank + nprocs - 1) % nprocs;
+
         MPI_CHECK(MPI_Barrier(MPI_COMM_WORLD));
 
-        if(rank == 0) {
-            for (i = 0; i < options.skip + options.loop; i++) {
-                if (i == options.skip) {
-                    t_start = MPI_Wtime ();
-                }
-                MPI_CHECK(MPI_Win_fence(0, win));
-                for(j = 0; j < window_size; j++) {
-                    MPI_CHECK(MPI_Get(rbuf+(j*size), size, MPI_CHAR, 1, disp + (j * size), size, MPI_CHAR,
-                            win));
-                }
-                MPI_CHECK(MPI_Win_fence(0, win));
+        for (i = 0; i < options.skip + options.loop; i++) {
+            if (i == options.skip) {
+                t_start = MPI_Wtime ();
             }
-            t_end = MPI_Wtime ();
-            t = t_end - t_start;
-        } else {
-            for (i = 0; i < options.skip + options.loop; i++) {
-                MPI_CHECK(MPI_Win_fence(0, win));
-                MPI_CHECK(MPI_Win_fence(0, win));
+            MPI_CHECK(MPI_Win_fence(0, win));
+            for(j = 0; j < window_size; j++) {
+                MPI_CHECK(MPI_Get(rbuf+(j*size), size, MPI_CHAR, origin_rank, disp + (j * size), size, MPI_CHAR,
+                        win));
             }
+            MPI_CHECK(MPI_Win_fence(0, win));
         }
+        t_end = MPI_Wtime ();
+        t = t_end - t_start;
 
         MPI_CHECK(MPI_Barrier(MPI_COMM_WORLD));
 
