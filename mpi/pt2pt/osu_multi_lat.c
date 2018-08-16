@@ -21,7 +21,7 @@ static void multi_latency(int rank, int pairs);
 int main(int argc, char* argv[])
 {
     unsigned long align_size = sysconf(_SC_PAGESIZE);
-    int rank, nprocs; 
+    int rank, nprocs;
     int pairs;
     char *sbuf_membind_type = NULL;
     char *rbuf_membind_type = NULL;
@@ -104,14 +104,21 @@ int main(int argc, char* argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     multi_latency(rank, pairs);
-    
+
     MPI_Barrier(MPI_COMM_WORLD);
+
+    if (sbuf_membind_type && strcmp(sbuf_membind_type, "MCDRAM") == 0)
+        free_mcdram_mem((void **)&s_buf, MAX_MSG_SIZE);
+    else
+       free(s_buf);
+
+    if (rbuf_membind_type && strcmp(rbuf_membind_type, "MCDRAM") == 0)
+        free_mcdram_mem((void **)&r_buf, MAX_MSG_SIZE);
+    else
+       free(r_buf);
 
     MPI_Finalize();
     fini_mcdram();
-
-    free(r_buf);
-    free(s_buf);
 
     return EXIT_SUCCESS;
 }
@@ -135,7 +142,7 @@ static void multi_latency(int rank, int pairs)
             options.loop = options.loop_large;
             options.skip = options.skip_large;
         } else {
-            options.loop = options.loop; 
+            options.loop = options.loop;
             options.skip = options.skip;
         }
 
@@ -176,7 +183,7 @@ static void multi_latency(int rank, int pairs)
 
         latency = (t_end - t_start) * 1.0e6 / (2.0 * options.loop);
 
-        MPI_Reduce(&latency, &total_lat, 1, MPI_DOUBLE, MPI_SUM, 0, 
+        MPI_Reduce(&latency, &total_lat, 1, MPI_DOUBLE, MPI_SUM, 0,
                    MPI_COMM_WORLD);
 
         avg_lat = total_lat/(double) (pairs * 2);

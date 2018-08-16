@@ -38,21 +38,21 @@ char const *sync_info[20] = {
 MPI_Aint disp_remote;
 MPI_Aint disp_local;
 
-int mem_on_dev; 
+int mem_on_dev;
 struct options_t options;
 
 static size_t sbuf_free_size = 0;
 static size_t rbuf_free_size = 0;
 
-void 
-usage (int options_type, char const * name) 
+void
+usage (int options_type, char const * name)
 {
     if (CUDA_ENABLED || OPENACC_ENABLED) {
         printf("Usage: %s [options] [RANK0 RANK1] \n", name);
         printf("RANK0 and RANK1 may be `D' or `H' which specifies whether\n"
                "the buffer is allocated on the accelerator device or host\n"
                "memory for each mpi rank\n\n");
-    } else { 
+    } else {
         printf("Usage: %s [options] \n", name);
     }
 
@@ -68,7 +68,7 @@ usage (int options_type, char const * name)
     printf("            create            use MPI_Win_create to create an MPI Window object\n");
     if (CUDA_ENABLED || OPENACC_ENABLED) {
         printf("            allocate          use MPI_Win_allocate to create an MPI Window object (not valid when using device memory)\n");
-    } else { 
+    } else {
         printf("            allocate          use MPI_Win_allocate to create an MPI Window object\n");
     }
     printf("            dynamic           use MPI_Win_create_dynamic to create an MPI Window object\n");
@@ -79,7 +79,7 @@ usage (int options_type, char const * name)
     printf("            <sync_option> can be any of the follows:\n");
     printf("            pscw              use Post/Start/Complete/Wait synchronization calls \n");
     printf("            fence             use MPI_Win_fence synchronization call\n");
-    if (options_type == all_sync) { 
+    if (options_type == all_sync) {
         printf("            lock              use MPI_Win_lock/unlock synchronizations calls\n");
 #if MPI_VERSION >= 3
         printf("            flush             use MPI_Win_flush synchronization call\n");
@@ -185,8 +185,8 @@ cleanup_accel (void)
     return 0;
 }
 
-int 
-process_options(int argc, char *argv[], WINDOW *win, SYNC *sync, int options_type) 
+int
+process_options(int argc, char *argv[], WINDOW *win, SYNC *sync, int options_type)
 {
     extern char *optarg;
     extern int  optind;
@@ -224,7 +224,7 @@ process_options(int argc, char *argv[], WINDOW *win, SYNC *sync, int options_typ
             case 'x':
                 options.skip = atoi(optarg);
                 break;
-            case 'i':                                
+            case 'i':
                 options.loop = atoi(optarg);
                 break;
             case 'd':
@@ -267,8 +267,8 @@ process_options(int argc, char *argv[], WINDOW *win, SYNC *sync, int options_typ
                 }
                 else if (0 == strcasecmp(optarg, "fence")) {
                     *sync = FENCE;
-                } 
-                else if (options_type == all_sync) { 
+                }
+                else if (options_type == all_sync) {
                     if (0 == strcasecmp(optarg, "lock")) {
                         *sync = LOCK;
                     }
@@ -283,7 +283,7 @@ process_options(int argc, char *argv[], WINDOW *win, SYNC *sync, int options_typ
                         *sync = LOCK_ALL;
                     }
 #endif
-                    else { 
+                    else {
                         return po_bad_usage;
                     }
                 }
@@ -291,7 +291,7 @@ process_options(int argc, char *argv[], WINDOW *win, SYNC *sync, int options_typ
                     return po_bad_usage;
                 }
                 break;
-            
+
             case 'h':
                 return po_help_message;
             default:
@@ -325,7 +325,7 @@ process_options(int argc, char *argv[], WINDOW *win, SYNC *sync, int options_typ
         }
 
 #if MPI_VERSION >= 3
-        if ((options.rank0 == 'D' || options.rank1 == 'D') 
+        if ((options.rank0 == 'D' || options.rank1 == 'D')
             && *win == WIN_ALLOCATE) {
             *win = WIN_CREATE;
         }
@@ -426,8 +426,8 @@ set_device_memory (void * ptr, int data, size_t size)
     }
 }
 
-void 
-allocate_memory(int rank, char *sbuf_orig, char *rbuf_orig, char **sbuf, char **rbuf, 
+void
+allocate_memory(int rank, char *sbuf_orig, char *rbuf_orig, char **sbuf, char **rbuf,
             char **win_base, int size, WINDOW type, MPI_Win *win)
 {
     int page_size;
@@ -437,7 +437,6 @@ allocate_memory(int rank, char *sbuf_orig, char *rbuf_orig, char **sbuf, char **
     sbuf_membind_type = getenv("OSU_SBUF_MEMBIND_TYPE");
     rbuf_membind_type = getenv("OSU_RBUF_MEMBIND_TYPE");
 
-    
     page_size = getpagesize();
     assert(page_size <= MAX_ALIGNMENT);
 
@@ -499,7 +498,8 @@ allocate_memory(int rank, char *sbuf_orig, char *rbuf_orig, char **sbuf, char **
             if (mem_on_dev) {
                 MPI_CHECK(MPI_Win_create(*win_base, size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, win));
             } else {
-                MPI_CHECK(MPI_Win_allocate(size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, *win_base, win));
+                void *win_base_ptr = NULL;
+                MPI_CHECK(MPI_Win_allocate(size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win_basei_ptr, win));
             }
             break;
     }
@@ -508,9 +508,9 @@ allocate_memory(int rank, char *sbuf_orig, char *rbuf_orig, char **sbuf, char **
 #endif
 }
 
-void 
-allocate_atomic_memory(int rank, char *sbuf_orig, char *rbuf_orig, char *tbuf_orig, 
-            char *cbuf_orig, char **sbuf, char **rbuf, char **tbuf, 
+void
+allocate_atomic_memory(int rank, char *sbuf_orig, char *rbuf_orig, char *tbuf_orig,
+            char *cbuf_orig, char **sbuf, char **rbuf, char **tbuf,
             char **cbuf, char **win_base, int size, WINDOW type, MPI_Win *win)
 {
     int page_size;
@@ -582,7 +582,7 @@ allocate_atomic_memory(int rank, char *sbuf_orig, char *rbuf_orig, char *tbuf_or
 #endif
 }
 
-void 
+void
 free_atomic_memory (void *sbuf, void *rbuf, void *tbuf, void *cbuf, MPI_Win win, int rank)
 {
     MPI_Win_free(&win);
@@ -609,7 +609,7 @@ free_atomic_memory (void *sbuf, void *rbuf, void *tbuf, void *cbuf, MPI_Win win,
     }
 }
 
-void 
+void
 free_memory (void *sbuf, void *rbuf, MPI_Win win, int rank)
 {
     MPI_Win_free(&win);
@@ -628,12 +628,12 @@ free_memory (void *sbuf, void *rbuf, MPI_Win win, int rank)
             }
             break;
     }
-    
+
     if (sbuf_free_size > 0) {
         free_mcdram_mem(sbuf, sbuf_free_size);
         sbuf_free_size = 0;
     }
-    
+
     if (rbuf_free_size > 0) {
         free_mcdram_mem(rbuf, rbuf_free_size);
         rbuf_free_size = 0;

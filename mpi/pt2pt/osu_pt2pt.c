@@ -1,9 +1,9 @@
 /*
  * Copyright (C) 2002-2016 the Network-Based Computing Laboratory
  * (NBCL), The Ohio State University.
- *    
+ *
  * Contact: Dr. D. K. Panda (panda@cse.ohio-state.edu)
- *      
+ *
  * For detailed copyright and licensing information, please refer to the
  * copyright file COPYRIGHT in the top level directory.
  */
@@ -97,17 +97,17 @@ set_num_warmup (int value)
 
 int
 process_options (int argc, char *argv[], int type)
-{   
+{
     extern char * optarg;
     extern int optind;
-    
+
     char const * optstring = (CUDA_ENABLED || OPENACC_ENABLED) ? "+d:x:i:h" : "+x:i:h";
     int c;
-    
+
     /*
      * set default options
      */
-      
+
     options.src = 'H';
     options.dst = 'H';
 
@@ -127,18 +127,18 @@ process_options (int argc, char *argv[], int type)
             break;
     }
 
-    if (CUDA_ENABLED) { 
+    if (CUDA_ENABLED) {
         options.accel = cuda;
     }
-    
+
     else if (OPENACC_ENABLED) {
         options.accel = openacc;
     }
-    
+
     else {
         options.accel = none;
     }
-    
+
     while((c = getopt(argc, argv, optstring)) != -1) {
         switch (c) {
             case 'd':
@@ -149,14 +149,14 @@ process_options (int argc, char *argv[], int type)
                     }
                     options.accel = cuda;
                 }
-                
+
                 else if (0 == strncasecmp(optarg, "openacc", 10)) {
                     if (!OPENACC_ENABLED) {
                         return po_openacc_not_avail;
                     }
                     options.accel = openacc;
                 }
-                
+
                 else {
                     return po_bad_usage;
                 }
@@ -183,12 +183,12 @@ process_options (int argc, char *argv[], int type)
                 return po_bad_usage;
         }
     }
-    
+
     if (CUDA_ENABLED || OPENACC_ENABLED) {
         if ((optind + 2) == argc) {
             options.src = argv[optind][0];
             options.dst = argv[optind + 1][0];
-            
+
             switch (options.src) {
                 case 'D':
                 case 'H':
@@ -197,7 +197,7 @@ process_options (int argc, char *argv[], int type)
                 default:
                     return po_bad_usage;
             }
-            
+
             switch (options.dst) {
                 case 'D':
                 case 'H':
@@ -207,12 +207,12 @@ process_options (int argc, char *argv[], int type)
                     return po_bad_usage;
             }
         }
-        
+
         else if (optind != argc) {
             return po_bad_usage;
         }
     }
-    
+
     return po_okay;
 }
 
@@ -375,7 +375,7 @@ allocate_memory (char ** sbuf, char ** rbuf, int rank)
                 if (sbuf_membind_type && strcmp(sbuf_membind_type, "MCDRAM") == 0) {
                     alloc_mcdram_mem((void **)sbuf, MYBUFSIZE);
                 }
-                else 
+                else
                     if (posix_memalign((void**)sbuf, align_size, MYBUFSIZE)) {
                         fprintf(stderr, "Error allocating host memory\n");
                         return 1;
@@ -420,7 +420,7 @@ allocate_memory (char ** sbuf, char ** rbuf, int rank)
                 if (sbuf_membind_type && strcmp(sbuf_membind_type, "MCDRAM") == 0) {
                     alloc_mcdram_mem((void **)sbuf, MYBUFSIZE);
                 }
-                else 
+                else
                     if (posix_memalign((void**)sbuf, align_size, MYBUFSIZE)) {
                         fprintf(stderr, "Error allocating host memory\n");
                         return 1;
@@ -438,7 +438,7 @@ allocate_memory (char ** sbuf, char ** rbuf, int rank)
             break;
     }
 
-    touch_data(sbuf, rbuf, rank, MYBUFSIZE);
+    touch_data(*sbuf, *rbuf, rank, MYBUFSIZE);
 
     return 0;
 }
@@ -468,7 +468,7 @@ print_header (int rank, int type)
             default:
                 if (type == BW) {
                     printf("%-*s%*s\n", 10, "# Size", FIELD_WIDTH, "Bandwidth (MB/s)");
-                } 
+                }
                 else {
                     printf("%-*s%*s\n", 10, "# Size", FIELD_WIDTH, "Latency (us)");
                 }

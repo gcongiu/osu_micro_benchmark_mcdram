@@ -1,7 +1,7 @@
 #define BENCHMARK "OSU MPI_Put%s Bandwidth Test"
 /*
  * Copyright (C) 2003-2016 the Network-Based Computing Laboratory
- * (NBCL), The Ohio State University.            
+ * (NBCL), The Ohio State University.
  *
  * Contact: Dr. D. K. Panda (panda@cse.ohio-state.edu)
  *
@@ -31,7 +31,7 @@ char    sbuf_original[MYBUFSIZE];
 char    rbuf_original[MYBUFSIZE];
 char    *sbuf=NULL, *rbuf=NULL;
 
-void print_header (int, WINDOW, SYNC); 
+void print_header (int, WINDOW, SYNC);
 void print_bw (int, int, double);
 void run_put_with_lock (int, WINDOW);
 void run_put_with_fence (int, WINDOW);
@@ -70,10 +70,6 @@ int main (int argc, char *argv[])
     MPI_CHECK(MPI_Comm_size(MPI_COMM_WORLD, &nprocs));
     MPI_CHECK(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
 
-    /* touch static arrays to make them contiguous in physical memory */
-    //memset(sbuf_original, 'a', MYBUFSIZE);
-    //memset(rbuf_original, 'b', MYBUFSIZE); 
-
     if (0 == rank) {
         switch (po_ret) {
             case po_cuda_not_avail:
@@ -104,9 +100,9 @@ int main (int argc, char *argv[])
             break;
     }
 
-    if(nprocs < 2) {
+    if((nprocs % 2) != 0) {
         if(rank == 0) {
-            fprintf(stderr, "This test requires at least two processes\n");
+            fprintf(stderr, "This test requires at least one pair of processes\n");
         }
 
         MPI_CHECK(MPI_Finalize());
@@ -123,17 +119,17 @@ int main (int argc, char *argv[])
         case PSCW:
             run_put_with_pscw(rank, win_type);
             break;
-        case FENCE: 
+        case FENCE:
             run_put_with_fence(rank, win_type);
             break;
 #if MPI_VERSION >= 3
         case LOCK_ALL:
             run_put_with_lock_all(rank, win_type);
             break;
-        case FLUSH_LOCAL: 
+        case FLUSH_LOCAL:
             run_put_with_flush_local(rank, win_type);
             break;
-        default: 
+        default:
             run_put_with_flush(rank, win_type);
             break;
 #endif
@@ -388,6 +384,7 @@ void run_put_with_fence(int rank, WINDOW type)
 
     int size, i, j;
     int target_rank;
+    int num_pairs;
     MPI_Aint disp = 0;
     MPI_Win     win;
 
@@ -407,32 +404,33 @@ void run_put_with_fence(int rank, WINDOW type)
         }
 
         /* get target rank to which Put to */
-        target_rank = (rank + 1) % nprocs;
+        num_pairs = nprocs / 2;
+        target_rank = (rank + num_pairs) % nprocs;
 
         MPI_CHECK(MPI_Barrier(MPI_COMM_WORLD));
-	    for (i = 0; i < options.skip + options.loop; i++) {
-	        if (i == options.skip) {
-	        	t_start = MPI_Wtime ();
-	        }
-	        MPI_CHECK(MPI_Win_fence(0, win));
-	        for(j = 0; j < window_size; j++) {
-		        MPI_CHECK(MPI_Put(sbuf+(j*size), size, MPI_CHAR, target_rank, disp + (j * size), size, MPI_CHAR,
-			        win));
-	        }
-	        MPI_CHECK(MPI_Win_fence(0, win));
-	    }
-	    t_end = MPI_Wtime ();
-	    t = t_end - t_start;
+        for (i = 0; i < options.skip + options.loop; i++) {
+            if (i == options.skip) {
+                t_start = MPI_Wtime ();
+            }
+            MPI_CHECK(MPI_Win_fence(0, win));
+            for(j = 0; j < window_size; j++) {
+                MPI_CHECK(MPI_Put(sbuf+(j*size), size, MPI_CHAR, target_rank, disp + (j * size), size, MPI_CHAR,
+                          win));
+            }
+            MPI_CHECK(MPI_Win_fence(0, win));
+        }
+        t_end = MPI_Wtime ();
+        t = t_end - t_start;
+
+        MPI_CHECK(MPI_Barrier(MPI_COMM_WORLD));
+
+        print_bw(rank, size, t);
 
         if (rank == 0 && size == MAX_SIZE) {
             char cmd[64];
             sprintf(cmd, "numastat -p %d", getpid());
             system(cmd);
         }
-
-        MPI_CHECK(MPI_Barrier(MPI_COMM_WORLD));
-
-        print_bw(rank, size, t);
 
         free_memory (sbuf, rbuf, win, rank);
     }

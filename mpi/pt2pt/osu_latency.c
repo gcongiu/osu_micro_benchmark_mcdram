@@ -1,7 +1,7 @@
 #define BENCHMARK "OSU MPI%s Latency Test"
 /*
  * Copyright (C) 2002-2016 the Network-Based Computing Laboratory
- * (NBCL), The Ohio State University. 
+ * (NBCL), The Ohio State University.
  *
  * Contact: Dr. D. K. Panda (panda@cse.ohio-state.edu)
  *
@@ -81,7 +81,6 @@ main (int argc, char *argv[])
 
     print_header(myid, LAT);
 
-    
     /* Latency test */
     for(size = 0; size <= MAX_MSG_SIZE; size = (size ? size * 2 : 1)) {
         //touch_data(s_buf, r_buf, myid, size);
